@@ -4549,15 +4549,20 @@ links.Timeline.prototype.getGroup = function (groupName, groupOrder) {
         };
         groups.push(groupObj);
         // sort the groups
-        groups = groups.sort(function (a, b) {
-            if (a.order > b.order) {
-                return -1;
-            }
-            if (a.order < b.order) {
-                return 1;
-            }
-            return 0;
-        });
+
+        if (this.options.groupsOrder == true) {
+          groups = groups.sort(function (a, b) {
+              if (a.order > b.order) {
+                  return -1;
+              }
+              if (a.order < b.order) {
+                  return 1;
+              }
+              return 0;
+          });
+        } else if (typeof(this.options.groupsOrder) == "function") {
+          groups = groups.sort(this.options.groupsOrder)
+        }
 
         // rebuilt the groupIndexes
         for (var i = 0, iMax = groups.length; i < iMax; i++) {
