@@ -4438,7 +4438,8 @@ links.Timeline.prototype.createItem = function(itemData) {
         content: itemData.content,
         className: itemData.className,
         editable: itemData.editable,
-        group: this.getGroup(itemData.group),
+        order: itemData.order,
+        group: this.getGroup(itemData.group, itemData.order),
         type: type
     };
     // TODO: optimize this, when creating an item, all data is copied twice...
@@ -4487,7 +4488,8 @@ links.Timeline.prototype.changeItem = function (index, itemData, preventRender) 
         'group':     itemData.hasOwnProperty('group') ?     itemData.group :     this.getGroupName(oldItem.group),
         'className': itemData.hasOwnProperty('className') ? itemData.className : oldItem.className,
         'editable':  itemData.hasOwnProperty('editable') ?  itemData.editable :  oldItem.editable,
-        'type':      itemData.hasOwnProperty('type') ?      itemData.type :      oldItem.type
+        'type':      itemData.hasOwnProperty('type') ?      itemData.type :      oldItem.type,
+        'order':     itemData.hasOwnProperty('order') ?     itemData.order :     oldItem.order
     });
     this.items[index] = newItem;
 
@@ -4530,15 +4532,16 @@ links.Timeline.prototype.deleteGroups = function () {
  * @param {String} groupName   the name of the group
  * @return {Object} groupObject
  */
-links.Timeline.prototype.getGroup = function (groupName) {
+links.Timeline.prototype.getGroup = function (groupName, groupOrder) {
     var groups = this.groups,
         groupIndexes = this.groupIndexes,
         groupObj = undefined;
 
-    var groupIndex = groupIndexes[groupName];
+    var groupIndex = groupIndexes[groupOrder];
     if (groupIndex == undefined && groupName != undefined) { // not null or undefined
         groupObj = {
             'content': groupName,
+            'order': groupOrder ? groupOrder : groupName,
             'labelTop': 0,
             'lineTop': 0
             // note: this object will lateron get addition information, 
@@ -4546,23 +4549,19 @@ links.Timeline.prototype.getGroup = function (groupName) {
         };
         groups.push(groupObj);
         // sort the groups
-        if (this.options.groupsOrder == true) {
-	        groups = groups.sort(function (a, b) {
-	            if (a.content > b.content) {
-	                return 1;
-	            }
-	            if (a.content < b.content) {
-	                return -1;
-	            }
-	            return 0;
-	        });
-        } else if (typeof(this.options.groupsOrder) == "function") {
-        	groups = groups.sort(this.options.groupsOrder)
-        }
+        groups = groups.sort(function (a, b) {
+            if (a.order > b.order) {
+                return -1;
+            }
+            if (a.order < b.order) {
+                return 1;
+            }
+            return 0;
+        });
 
         // rebuilt the groupIndexes
         for (var i = 0, iMax = groups.length; i < iMax; i++) {
-            groupIndexes[groups[i].content] = i;
+            groupIndexes[groups[i].order] = i;
         }
     }
     else {
